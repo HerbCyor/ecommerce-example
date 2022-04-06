@@ -8,7 +8,7 @@ def cart_item_count(request):
     else:
         try:
             cart = Cart.objects.filter(cart_id=_getCartIdbySession(request))
-            cart_items = CartItem.objects.all().filter(cart=cart[0])
+            cart_items = CartItem.objects.all().filter(cart=cart[:1]) #why does this work? and not cart=cart[0]
             count = 0
             for item in cart_items:
                 count += item.quantity
