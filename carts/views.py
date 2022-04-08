@@ -16,6 +16,10 @@ def addProductToCart(request, product_id):
     ''' adds a product to an existing unique Cart (CartId = sessionId), otherwise creates a new unique Cart first'''
     product = Product.objects.get(id=product_id)
 
+    if request.method == 'POST':
+        color = request.POST['color']
+        size = request.POST['size']
+
     try:
         cart = Cart.objects.get(cart_id=_getCartIdbySession(request)) #get the cart using the cart_id present in the session
 
@@ -26,7 +30,7 @@ def addProductToCart(request, product_id):
         cart.save()
     
     try:
-        cart_item = CartItem.objects.get(product=product, cart=cart)
+        cart_item = CartItem.objects.get(product=product, cart=cart, color=color, size=size)
         cart_item.quantity += 1
         cart_item.save()
 
@@ -34,19 +38,21 @@ def addProductToCart(request, product_id):
         cart_item = CartItem.objects.create(
             product = product,
             cart = cart,
-            quantity = 1
+            quantity = 1,
+            color=color,
+            size = size,
         )
         cart_item.save()
 
     return redirect('cart')
 
-def removeProductFromCart(request, product_id):
+def decreaseItemQuantity(request, cart_item_id):
     
     ''' gotta change this still '''
     
     cart = Cart.objects.get(cart_id=_getCartIdbySession(request))
-    product = get_object_or_404(Product, id=product_id)
-    item = CartItem.objects.get(product=product, cart=cart)
+    item = get_object_or_404(CartItem, id=cart_item_id, cart=cart)
+    # item = CartItem.objects.get(product=product, cart=cart)
     if item.quantity > 0:
         item.quantity -=1
         item.save()
@@ -56,14 +62,23 @@ def removeProductFromCart(request, product_id):
     
     return redirect('cart')
 
-def removeCartItem(request, product_id):
+def increaseItemQuantity(request, cart_item_id):
+
     cart = Cart.objects.get(cart_id=_getCartIdbySession(request))
-    product = get_object_or_404(Product, id=product_id)
-    item = CartItem.objects.get(product=product, cart=cart)
-    item.delete()
+    item = get_object_or_404(CartItem, id=cart_item_id, cart=cart)
+
+    item.quantity +=1
+    item.save()
 
     return redirect('cart')
 
+def removeItemFromCart(request, cart_item_id):
+    cart = Cart.objects.get(cart_id=_getCartIdbySession(request))
+    item = get_object_or_404(CartItem, id=cart_item_id, cart=cart)
+    # item = CartItem.objects.get(product=product, cart=cart)
+    item.delete()
+
+    return redirect('cart')
 
 def cart(request, total=0, quantity=0, cart_items=None):
 
