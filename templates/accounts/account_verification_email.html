@@ -1,0 +1,15 @@
+{% autoescape off %}
+
+Hi {{user.first_name}} {{user.last_name}},
+
+Please click on the following link to continue registration to Herb's e-commerce website.
+
+
+http://{{domain}}{% url 'activate' uidb64=uid token=token %}
+
+
+If this is not you, please ignore this email.
+
+
+Herb's Django e-commerce test website 
+{% endautoescape %}
