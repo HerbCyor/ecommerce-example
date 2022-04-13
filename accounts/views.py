@@ -12,7 +12,10 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
-
+#reset form
+from django.contrib.auth.forms import SetPasswordForm
+from django.db.models.query_utils import Q
+from django.contrib.auth import update_session_auth_hash
 # Create your views here.
 
 def register(request):
@@ -107,7 +110,7 @@ def activate(request, uidb64, token):
         return render(request, "accounts/failed_verification.html")
 
 
-def forgotpassword(request):
+def password_reset_request(request):
     
     if request.method == "POST":
         email = request.POST['email']
@@ -129,16 +132,12 @@ def forgotpassword(request):
             send_email.send()
 
             messages.success(request, "Password reset email sent.")
-            return redirect('forgotpassword')
+            return redirect('password_reset_request')
         else:
             messages.error(request,'Account not found')
-            return redirect('forgotpassword')
+            return redirect('password_reset_request')
 
-    return render(request, 'accounts/forgotpassword.html')
-
-@login_required(login_url='login')
-def dashboard(request):
-    return render(request, 'accounts/dashboard.html')
+    return render(request, 'accounts/password_reset_request.html')
 
 def resetpassword_validate(request, uidb64, token):
     try:
@@ -156,20 +155,25 @@ def resetpassword_validate(request, uidb64, token):
         return redirect('login') #change
 
 def resetpassword(request):
-
+    uid = request.session.get('uid')
+    user = Account.objects.get(pk=uid)
+    
+    
     if request.method == 'POST': #password validation
-        password1 = request.POST['password1']
-        password2 = request.POST['password2']
-
-        if password1 == password2:
-            uid = request.session.get('uid')
-            user = Account.objects.get(pk=uid)
-            user.set_password(password1)
-            user.save()
+        form = SetPasswordForm(user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
             messages.success(request, "password successfully reset")
             return redirect('login')
         else:
-            messages.error(request,"passwords don't match")
-            return redirect('resetpassword')
+            messages.error(request, "Errors:")
+    else:
+        form = SetPasswordForm(user)
+        
+    return render(request, "accounts/resetpassword.html", {'form':form})
 
-    return render(request, "accounts/resetpassword.html")
+
+@login_required(login_url='login')
+def dashboard(request):
+    return render(request, 'accounts/dashboard.html')
