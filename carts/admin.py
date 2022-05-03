@@ -3,10 +3,10 @@ from .models import Cart, CartItem
 # Register your models here.
 
 class CartAdmin(admin.ModelAdmin):
-    readonly_fields = ('cart_items',)
+    readonly_fields = ('cart_items','date_added')
     fieldsets = (
         (None,{
-            'fields': ('cart_id', 'cart_items')
+            'fields': ('user','cart_id', 'cart_items', 'date_added')
             }),
             )
 

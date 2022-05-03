@@ -65,3 +65,38 @@ class Account(AbstractBaseUser):
 
     def has_module_perms(self, add_label):
         return True
+
+class ShippingAddress(models.Model):
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=200)
+    street = models.CharField(max_length=200)
+    number = models.CharField(max_length=200, blank=True)
+    complement = models.CharField(max_length=200, blank=True)
+    area = models.CharField(max_length=200)
+    state = models.CharField(max_length=200)
+    city = models.CharField(max_length=200)
+    zip_code = models.IntegerField()
+    
+    is_active = models.BooleanField(default=True)
+    is_selected = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'shipping adress'
+        verbose_name_plural = 'shipping adresses'
+
+    def __str__(self):
+        return self.user.username + ' address'
+
+    @property
+    def to_dict(self):
+        data = {
+            'full_name' : self.full_name,
+            'street'    : self.street,
+            'number'    : self.number,
+            'complement': self.complement,
+            'area'      : self.area,
+            'state'     : self.state,
+            'city'      : self.city,
+            'zip_code'  : self.zip_code,
+                }
+        return data

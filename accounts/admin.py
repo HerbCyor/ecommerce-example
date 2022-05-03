@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Account
+from .models import Account, ShippingAddress
 
 # Register your models here.
 #this is to make passwords and other properties read only and change how properties are displayed in the admin page
@@ -14,3 +14,4 @@ class AccountAdmin(UserAdmin):
     fieldsets = ()
 
 admin.site.register(Account, AccountAdmin)
+admin.site.register(ShippingAddress)

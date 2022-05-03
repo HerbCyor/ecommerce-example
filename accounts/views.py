@@ -16,6 +16,9 @@ from django.core.mail import EmailMessage
 from django.contrib.auth.forms import SetPasswordForm
 from django.db.models.query_utils import Q
 from django.contrib.auth import update_session_auth_hash
+
+from carts.views import _getCartIdbySession
+from carts.models import Cart
 # Create your views here.
 
 def register(request):
@@ -74,11 +77,27 @@ def login(request):
         password = request.POST['password']
 
         user = auth.authenticate(email=email, password=password)
+        next_url = request.POST.get('next')
         
         if user is not None:
+
+            try:
+                cart = Cart.objects.get(cart_id=_getCartIdbySession(request))
+                
+                if cart:
+                    cart.user = user
+                    cart.save()
+            except:
+                pass
+
             auth.login(request, user)
             messages.success(request, "logged in")
-            return redirect('dashboard')
+            
+            if next_url: #redirects to the original page if login request didn't come from the login link.
+                return redirect(next_url)
+            else:
+                return redirect('dashboard')
+        
         else:
             messages.error(request, "Wrong username or password")
             return redirect('login')

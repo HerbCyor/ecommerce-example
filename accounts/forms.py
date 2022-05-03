@@ -1,5 +1,5 @@
 from django import forms
-from .models import Account
+from .models import Account, ShippingAddress
 
 class RegistrationForm(forms.ModelForm):
     password1 = forms.CharField(widget=forms.PasswordInput())
@@ -24,3 +24,14 @@ class RegistrationForm(forms.ModelForm):
             raise forms.ValidationError(
                 "Password doesn't match"
             )
+
+class ShippingAddressForm(forms.ModelForm):
+
+    class Meta:
+        model = ShippingAddress
+        fields = ['full_name', 'street', 'number', 'complement', 'area','state','city','zip_code']
+
+    def __init__(self, *args, **kwargs):
+        super(ShippingAddressForm, self).__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs['class'] = 'form-control'
