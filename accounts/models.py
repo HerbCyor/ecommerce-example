@@ -40,7 +40,7 @@ class MyAccountManager(BaseUserManager):
 class Account(AbstractBaseUser):
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
-    username = models.CharField(max_length=50, unique=True)
+    username = models.CharField(max_length=50, unique=False)
     email = models.EmailField(max_length=100, unique=True)
     phone_number = models.CharField(max_length=50)
 
@@ -76,13 +76,13 @@ class ShippingAddress(models.Model):
     state = models.CharField(max_length=200)
     city = models.CharField(max_length=200)
     zip_code = models.IntegerField()
-    
+    country = models.CharField(max_length=100, default="BRAZIL")
     is_active = models.BooleanField(default=True)
     is_selected = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = 'shipping adress'
-        verbose_name_plural = 'shipping adresses'
+        verbose_name = 'shipping address'
+        verbose_name_plural = 'shipping addresses'
 
     def __str__(self):
         return self.user.username + ' address'

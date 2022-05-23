@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<section class="section-content padding-y bg">
+	<div class="container">
+		<!-- ============================ COMPONENT 1 ================================= -->
+		<div class="row">
+			<aside class="col-lg-9">
+			<div class="card">
+			<table class="table table-borderless table-shopping-cart">
+				<thead class="text-muted">
+					<tr class="small text-uppercase">
+					<th scope="col">Product</th>
+					<th scope="col" width="120">Quantity</th>
+					<th scope="col" width="120">Price</th>
+					<th scope="col" class="text-right" width="200"> </th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for item in order_items %}
+					<tr>
+					<td>
+						<figure class="itemside align-items-center">
+						<div class="aside">
+							<img src="{{ item.product.images.url }}" class="img-sm">
+						</div>
+						<figcaption class="info">
+							<a href="{{ item.product.get_url }}" class="title text-dark">{{ item.product.product_name}}</a>
+							<p class="text-muted small">Color: {{item.color}} <br> Size: {{item.size}}</p>
+						</figcaption>
+						</figure>
+					</td>
+					<td> <!-- col.// -->
+						<div class="col"> 
+							<div class="input-group input-spinner">
+								<div class="input-group-prepend">
+									<a href="{% url 'decreaseItemQuantity' item.id %}"  class="btn btn-light" type="button" id="button-plus"> <i class="fa fa-minus"></i> </a>							</div>
+									<input type="text" class="form-control"  value="{{ item.quantity }}">
+									<div class="input-group-append">
+										<a href="{% url 'increaseItemQuantity' item.id %}" class="btn btn-light" type="button" id="button-minus"> <i class="fa fa-plus"></i></a>
+									</div>
+								</div>
+							</div> <!-- input-group.// -->
+						</div> <!-- col.// -->
+					</td>
+					<td> 
+						<div class="price-wrap"> 
+							<var class="price">${{item.subtotal}}</var> 
+							<small class="text-muted"> ${{item.product.price}} each </small> 
+						</div> <!-- price-wrap .// -->
+					</td>
+					<td class="text-right"> 
+						<a href="{% url 'removeItemFromCart' item.id %}" class="btn btn-danger"> Remove</a>
+					</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+			</div> <!-- card.// -->
+			</aside> <!-- col.// -->
+			<aside class="col-lg-3">
+				<div class="card">
+					<div class="card-body">
+						<dl class="dlist-align">
+							<dt>Total:</dt>
+							<dd class="text-right text-dark b"><strong>${{order.order_total}}</strong></dd>
+						</dl>
+					<hr>
+						<p class="text-center mb-3">
+							<img src="{% static './images/misc/payments.png' %}" height="26">
+						</p>
+						<div id="paypal-button-container">
+
+
+                        </div>
+
+					</div> <!-- card-body.// -->
+				</div> <!-- card.// -->
+			</aside> <!-- col.// -->
+		</div> <!-- row.// -->
+		
+		<!-- ============================ COMPONENT 1 END .// ================================= -->
+	</div> <!-- container .//  -->
+</section>
+
+<script>
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+}
+    
+    var amount = "{{ order.order_total }}"
+    var orderID = "{{ order.order_number}}"
+    var payment_method = "PayPal"
+    var url = "{% url 'payment' %}"    
+    var csrftoken = getCookie('csrftoken');
+	var redirect_url = "{% url 'order_complete' %}"
+    
+    paypal.Buttons({
+
+      // Sets up the transaction when a payment button is clicked
+        style:{
+            color: 'blue',
+            shape: 'pill',
+            label: 'pay',
+            height: 40
+        },
+        createOrder: (data, actions) => {
+
+            return actions.order.create({
+
+                purchase_units: [{
+
+                    amount: {
+
+                        value: amount // Can also reference a variable or function
+                    }
+                }]
+            });
+        },
+
+      // Finalize the transaction after payer approval
+        onApprove: (data, actions) => {
+
+            return actions.order.capture().then(function(orderData) {
+
+                // Successful capture! For dev/demo purposes:
+
+                console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
+
+                const transaction = orderData.purchase_units[0].payments.captures[0];
+                sendData();
+                function sendData(){
+                    fetch(url,{
+                        method: "POST",
+                        headers:{
+                            "Content-type": "application/json",
+                            "X-CSRFToken": csrftoken,
+                        },
+                        body: JSON.stringify({
+                            orderID: orderID,
+                            transID: orderData.id,
+                            payment_method: payment_method,
+                            status: orderData.status,
+                        }),
+                    })
+                    .then(response => response.json())
+					.then (data => {
+						window.location.href = redirect_url + '?order_number='+ data.order_number+'&payment_id='+data.transID;
+					});
+
+                }
+                // When ready to go live, remove the alert and show a success message within this page. For example:
+
+                // const element = document.getElementById('paypal-button-container');
+
+                // element.innerHTML = '<h3>Thank you for your payment!</h3>';
+
+                // Or go to another URL:  actions.redirect('thank_you.html');
+            });
+        }
+    }).render('#paypal-button-container');
+
+</script>
+{% endblock %}

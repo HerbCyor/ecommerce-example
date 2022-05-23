@@ -161,6 +161,11 @@ def selectShippingAddress(request, address_id):
         address.save()
     return redirect('checkout')
 
+def removeShippingAddress(request, address_id):
+    user = request.user
+    selected_address = ShippingAddress.objects.get(user=user, pk=address_id)
+    selected_address.delete()
+    return redirect('checkout')
 
 @login_required(login_url='login')
 def checkout(request, total=0, quantity=0, cart_items=None):
@@ -184,6 +189,10 @@ def checkout(request, total=0, quantity=0, cart_items=None):
         shipping_address = None
 
     shipping_address_form = ShippingAddressForm(request.POST)
+    if shipping_address:
+        order = str(cart.id) + '-' + str(shipping_address.id)
+    else:
+        order = "0"
     context = {
         'total': total,
         'quantity':quantity,
@@ -192,6 +201,7 @@ def checkout(request, total=0, quantity=0, cart_items=None):
         'shipping_address':shipping_address,
         'shipping_address_form':shipping_address_form,
         'user_shipping_address':user_shipping_address,
+        'order': order,
     }
 
     return render(request, 'store/checkout.html', context)

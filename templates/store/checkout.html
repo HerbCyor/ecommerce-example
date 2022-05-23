@@ -69,8 +69,12 @@
               {% endfor %}
               </tbody>
             </table>
-						<a href="{% url 'checkout' %}" class="btn btn-primary btn-block"> Place Order </a>
-						<a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
+            {% if shipping_address %}
+						<a href="{% url 'place_order' order %}" class="btn btn-primary btn-block"> Place Order </a>
+						{% else %}
+            <a href="" class="btn btn-primary btn-block" disabled> Add Shipping address </a>
+            {% endif %}
+            <a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
 					</div> <!-- card-body.// -->
 				</div> <!-- card.// -->
 			</aside> <!-- col.// -->
@@ -149,7 +153,7 @@
                         </aside>
                     </div>
                     <aside class="col-lg-8">
-                        <button type="button" class="btn btn-danger">Remove</button>
+                        <a href="{% url 'removeShippingAddress' address.id %} "><button type="button" class="btn btn-danger">Remove</button></a>
                         <a href="{% url 'selectShippingAddress' address.id %}"><button type="button" class="btn btn-primary" >Select</button></a>
                         <button type="button" class="btn btn-success"  formmethod='post' data-dismiss='modal' data-toggle="modal" data-target="#updateAddressModal{{address.id}}">Update</button>
                     </aside>

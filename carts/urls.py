@@ -11,4 +11,5 @@ urlpatterns = [
     path('addShippingAddress', views.addShippingAddress, name='addShippingAddress'),
     path('selectShippingAddress/<int:address_id>', views.selectShippingAddress, name='selectShippingAddress'),
     path('updateShippingAddress/<int:address_id>', views.updateShippingAddress, name='updateShippingAddress'),
+    path('removeShippingAddress/<int:address_id>', views.removeShippingAddress, name='removeShippingAddress'),
 ]
