@@ -1,10 +1,7 @@
-from django.shortcuts import render, redirect
-from .forms import RegistrationForm
-from .models import Account
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
 #account verification imports
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
@@ -13,12 +10,16 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 #reset form
-from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.forms import SetPasswordForm, PasswordChangeForm
 from django.db.models.query_utils import Q
 from django.contrib.auth import update_session_auth_hash
 
 from carts.views import _getCartIdbySession
 from carts.models import Cart
+from orders.models import OrderItem
+from orders.models import Order
+from .forms import RegistrationForm, ShippingAddressForm, UserForm, UserProfileForm
+from .models import Account, ShippingAddress, UserProfile
 # Create your views here.
 
 def register(request):
@@ -174,12 +175,25 @@ def resetpassword_validate(request, uidb64, token):
         return redirect('login') #change
 
 def resetpassword(request):
-    uid = request.session.get('uid')
-    user = Account.objects.get(pk=uid)
     
+    uid = request.session.get('uid') #used for password reset request from 'forgot password'
+
+    try:
+        user = Account.objects.get(pk=uid) #used for password reset request from 'forgot password'
+        origin = 'forgot-password'
+    except (Account.DoesNotExist):
+        if request.user.is_authenticated:
+            user = Account.objects.get(id=request.user.id) #password reset from dashboard
+            origin = 'dashboard'
+        else:
+            return redirect('home')
     
     if request.method == 'POST': #password validation
-        form = SetPasswordForm(user, request.POST)
+        if origin == 'forgot-password':
+            form = SetPasswordForm(user, request.POST)
+        elif origin == 'dashboard':
+            form = PasswordChangeForm(user, request.POST)
+        
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)
@@ -188,11 +202,80 @@ def resetpassword(request):
         else:
             messages.error(request, "Errors:")
     else:
-        form = SetPasswordForm(user)
-        
-    return render(request, "accounts/resetpassword.html", {'form':form})
+        if origin == 'forgot-password':
+            form = SetPasswordForm(user)
+        elif origin == 'dashboard':
+            form = PasswordChangeForm(user)
+
+    return render(request, "accounts/resetpassword.html", {'form':form, 'origin':origin})
 
 
 @login_required(login_url='login')
 def dashboard(request):
-    return render(request, 'accounts/dashboard.html')
+
+    orders = Order.objects.order_by('-created_at').filter(user_id=request.user.id, is_ordered=True)
+    profile = UserProfile.objects.get(user_id=request.user.id)
+    context = {
+        'orders': orders,
+        'profile': profile,
+    }
+    return render(request, 'accounts/dashboard.html', context)
+
+def my_orders(request):
+    
+    orders = Order.objects.order_by('-created_at').filter(user_id=request.user.id, is_ordered=True)
+
+    context ={
+        'orders':orders
+    }
+    return render(request, "accounts/my_orders.html", context)
+
+def edit_profile(request):
+    
+    user = request.user
+    profile = get_object_or_404(UserProfile, user=user)
+    
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=user)
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'profile updated')
+            return redirect('edit_profile')
+    else:
+        user_form = UserForm(instance=user)
+        profile_form = UserProfileForm(instance=profile)
+
+    # profile = UserProfile.objects.get(user=user)
+    address_list = ShippingAddress.objects.filter(user=user)
+    try:
+
+        primary_address = ShippingAddress.objects.get(user_id=user.id, is_selected=True)
+    except (ShippingAddress.DoesNotExist):
+        primary_address = None
+    shipping_address_form = ShippingAddressForm(request.POST)
+
+    context = {
+        'profile':profile,
+        'address_list':address_list,
+        'primary_address':primary_address,
+        'shipping_address_form': shipping_address_form,
+        'user_form':user_form,
+        'profile_form':profile_form,
+    }
+    return render(request, "accounts/edit_profile.html", context)
+@login_required(login_url='login')
+def order_detail(request, order_number):
+
+    order = Order.objects.get(order_number=order_number)
+    order_items = OrderItem.objects.filter(order=order)
+
+    context={
+        'order':order,
+        'order_items': order_items,
+        'shipping_address': order.shipping_address,
+        'payment':order.payment,
+    }
+    return render(request, 'accounts/order_detail.html', context)

@@ -5,6 +5,8 @@ from .models import Cart, CartItem
 from accounts.models import ShippingAddress
 from accounts.forms import ShippingAddressForm
 from django.contrib import messages
+from django.contrib.sites.shortcuts import get_current_site
+
 # Create your views here.
 
 def _getCartIdbySession(request):
@@ -115,6 +117,9 @@ def cart(request, total=0, quantity=0, cart_items=None):
     return render(request, 'store/cart.html', context)
 
 def addShippingAddress(request):
+
+    url = request.META.get('HTTP_REFERER')
+
     if request.method == 'POST':
         form = ShippingAddressForm(request.POST)
         if form.is_valid():
@@ -132,12 +137,13 @@ def addShippingAddress(request):
             new_shipping_address.is_selected = True
             new_shipping_address.save()
             messages.success(request, "yaay")
-            return redirect('checkout')
+            return redirect(url)
         else:
             messages.error(request, "something here!!!")
 
 def updateShippingAddress(request,address_id):
-
+    #NOT IMPLEMENTED
+    # url = request.META.get('HTTP_REFERER')
     user = request.user
     shipping_address = ShippingAddress.objects.get(user=user, pk=address_id)
     shipping_address_form = ShippingAddressForm(request.POST, instance=shipping_address)
@@ -150,6 +156,7 @@ def updateShippingAddress(request,address_id):
     return render(request, 'store/checkout.html', context)
 
 def selectShippingAddress(request, address_id):
+    url = request.META.get('HTTP_REFERER')
     user = request.user
     selected_address = ShippingAddress.objects.get(user=user, pk=address_id)
 
@@ -159,13 +166,14 @@ def selectShippingAddress(request, address_id):
         else:
             address.is_selected = False
         address.save()
-    return redirect('checkout')
+    return redirect(url)
 
 def removeShippingAddress(request, address_id):
+    url = request.META.get('HTTP_REFERER')
     user = request.user
     selected_address = ShippingAddress.objects.get(user=user, pk=address_id)
     selected_address.delete()
-    return redirect('checkout')
+    return redirect(url)
 
 @login_required(login_url='login')
 def checkout(request, total=0, quantity=0, cart_items=None):

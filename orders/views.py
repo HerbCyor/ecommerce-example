@@ -70,7 +70,8 @@ def place_order(request, order):
     new_order = Order(
         user = order_user,
         shipping_address=order_shipping_address,
-        order_total=0,  
+        order_total=0,
+        ip = request.META.get('REMOTE_ADDR'),  
     )
     new_order.save()
     new_order.generate_order_number()

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 # Create your models here.
 
 class MyAccountManager(BaseUserManager):
@@ -100,3 +101,18 @@ class ShippingAddress(models.Model):
             'zip_code'  : self.zip_code,
                 }
         return data
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(Account, on_delete=models.CASCADE)
+    profile_picture = models.ImageField(blank=True, upload_to='userprofile', default='userprofile/default.jpg')
+
+    def __str__(self) -> str:
+        return f"{self.user.first_name} {self.user.last_name}"
+
+    @receiver(post_save, sender=Account)
+    def create_user_profile(sender, instance, created, **kwargs):
+        if created:
+            UserProfile.objects.create(user=instance)
+    @receiver(post_save, sender=Account)
+    def save_user_profile(sender, instance, **kwargs):
+        instance.userprofile.save()

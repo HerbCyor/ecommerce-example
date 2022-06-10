@@ -1,111 +1,70 @@
 {% extends 'base.html' %}
-
-{% load static %}
-{% block content %}
 {% load crispy_forms_tags %}
-<section class="section-content padding-y bg">
-	<div class="container">
-		<!-- ============================ COMPONENT 1 ================================= -->
-		<div class="row">
-			<aside class="col-lg-7">
-			<div class="card">
-			<div class="card-body">
-                <h4 class="card-tittle">Shipping Address</h4>
-                <form action="">
-                    <div class="form-row">
-                        <div class="col form-group">
-                            {% if shipping_address %}
-                            {{shipping_address.full_name}}<br>
-                            {{shipping_address.street}} 
-                            {{shipping_address.number}}
-                            {{shipping_address.complement}}<br>
-                            {{shipping_address.area}}<br>
-                            {{shipping_address.city}} - {{shipping_address.state}}<br>
-                            {{shipping_address.zip_code}}<br>
-                            <a href="" data-toggle="modal" data-target="#exampleModalCenter2"><p>Change Address</p></a>
-                            {% else %}
-                            <a href="" data-toggle="modal" data-target="#exampleModalCenter"><p>Add New Address</p></a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </form>
-                
-            </div>
-			</div> <!-- card.// -->
-			</aside> <!-- col.// -->
 
-			<aside class="col-lg-5">
-				<div class="card">
-					<div class="card-body">
-            <table class="table table-borderless">
-              <thead class="text-muted">
-                <tr class="small text-uppercase">
-                <th scope="col">Product</th>
-                <th scope="col" width="120">Quantity</th>
-                <th scope="col" width="120">Price</th>
-                <th scope="col" class="text-right" width="200"> </th>
-                </tr>
-              </thead>
-              <tbody>
-              {% for item in cart_items %}
-                <tr>
-                <td>
-                  <div>
-                    <p>{{ item.product.product_name}}</p>
-                    <p class="text-muted small">{{item.color}}, {{item.size}}</p>
+{% block content %}
+<!-- ========================= SECTION CONTENT ========================= -->
+<section class="section-conten padding-y bg">
+
+<div class="container">
+	<div class="row">
+	{% include 'includes/sidebar.html' %}
+	<main class="col-md-9">
+		<article class="card">
+		<header class="card-header">
+			<strong class="d-inline-block mr-3">Your profile:</strong>{{ user.email }}
+			
+		</header>
+
+		<div class="card-body">
+			<div class="row"> 
+        <div class="card-body">
+          <img src="{{profile.profile_picture.url}}" alt="User Profile Picture" width="100" height="100" style="border-radius:50px;">
+          
+          <form action="" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <p class="mb-0">{{ profile_form.profile_picture }}</p>
+            <p>First Name: {{ user_form.first_name }} Last Name: {{ user_form.last_name }}</p>
+          <p>phone: {{user_form.phone_number}}</p>
+          <button class="btn btn-primary" type="sumbmit">Save Changes</button>
+          </form>
+        </div>
+				<div class="col-md-12">
+          <div class="card-body">
+          <form action="">
+              <div class="form-row">
+                  <div class="col form-group">
+                    <strong>Current address</strong><br>
+                      {% if primary_address %}
+                      {{primary_address.full_name}}<br>
+                      {{primary_address.street}} 
+                      {{primary_address.number}} {% if primary_address.complement %}/{{primary_address.complement}}{% endif %}<br>
+                      {{primary_address.area}}<br>
+                      {{primary_address.city}} - {{primary_address.state}}<br>
+                      {{primary_address.zip_code}}<br>
+                      <a href="" data-toggle="modal" data-target="#exampleModalCenter2"><button class="btn btn-primary">Change current address</button></a>
+                      <a href="" data-toggle="modal" data-target="#exampleModalCenter" data-dismiss="modal"><button class="btn btn-primary">Add New Address</button></a>
+                      {% else %}
+                      <a href="" data-toggle="modal" data-target="#exampleModalCenter"><p>Add New Address</p></a>
+                      {% endif %}
                   </div>
-                </td>
-                <td> <!-- col.// -->
-                  <div class="col"> 
-                        <p> {{ item.quantity }}</p>
-                  </div>
-                </td>
-                <td> 
-                  <div class="price-wrap"> 
-                    <var class="price">${{item.subtotal}}</var> 
-                  </div> <!-- price-wrap .// -->
-                </td>
-                </tr>
-              {% endfor %}
-              </tbody>
-            </table>
-            {% if shipping_address %}
-						<a href="{% url 'place_order' order %}" class="btn btn-primary btn-block"> Place Order </a>
-						{% else %}
-            <a href="" class="btn btn-primary btn-block" disabled> Add Shipping address </a>
-            {% endif %}
-            <a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
-					</div> <!-- card-body.// -->
-				</div> <!-- card.// -->
-			</aside> <!-- col.// -->
-		</div> <!-- row.// -->
-        <div class="card">
-			<div class="card-body">
-                <h4 class="card-tittle">Shipping Methods</h4>
-                <form action="">
-                    <div class="form-row">
-                    </div>
-                </form>
-            </div>
-		</div> <!-- card.// -->
+              </div>
+          </form>
+        </div>
+				</div>
+			</div> <!-- row.// -->
+		</div> <!-- card-body .// -->
 		
-        <div class="card">
-			<div class="card-body">
-                <h4 class="card-tittle">Payment Methods</h4>
-                <form action="">
-                    <div class="form-row">
-                    </div>
-                </form>
-            </div>
-		</div> <!-- card.// -->
-		
-		<!-- ============================ COMPONENT 1 END .// ================================= -->
-	</div> <!-- container .//  -->
+		</article> <!-- order-group.// --> 
+	</main>
+</div> <!-- row.// -->
+</div>
+
+
 </section>
 <!-- ========================= SECTION CONTENT END// ========================= -->
-<!-- Modal -->
+<!-- Modal for New shipping address -->
 <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="exampleModalLongTitle">New Shipping Address</h5>
@@ -116,7 +75,7 @@
         <div class="modal-body">
           <form action="{% url 'addShippingAddress' %}" method="POST">
               {% csrf_token %}
-              {{shipping_address_form|crispy}}
+              {{shipping_address_form|crispy}}<br>
               <button type="submit" class="btn btn-primary">Save Address</button>
           </form>
         </div>
@@ -126,7 +85,7 @@
       </div>
     </div>
   </div>
-<!-- modal 2-->
+<!-- modal for list of shipping addresses-->
   <div class="modal fade" id="exampleModalCenter2" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -137,7 +96,7 @@
             </button>
             </div>
             <div class="modal-body">
-                {% for address in user_shipping_address %}
+                {% for address in address_list %}
                 <div class="card">
                     <Form action="#" method="get">
                     <div class="card-body">
@@ -169,10 +128,10 @@
     </div>
     </div>
 
-<!-- Modal 3-->
+<!-- Modal for updating an existing shipping address NOT IMPLEMENTED-->
 {% for address in user_shipping_address %}
 <div class="modal fade" id="updateAddressModal{{address.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
       <div class="modal-content">
         <div class="modal-header">
             {% if shipping_address %}
@@ -201,6 +160,4 @@
     </div>
   </div>
 {% endfor %}
-
-
 {% endblock %}

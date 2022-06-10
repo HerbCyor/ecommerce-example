@@ -5,7 +5,7 @@ from .models import Payment, OrderItem, Order
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['order_number', 'user', 'order_total', 'status', ]
     
-    readonly_fields = ('order_number','created_at', 'payment', 'order_total')
+    readonly_fields = ('order_number','created_at', 'payment', 'order_total', 'ip')
     fieldsets = (
         (None,{
             'fields': (

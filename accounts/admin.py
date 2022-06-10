@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Account, ShippingAddress
+from .models import Account, ShippingAddress, UserProfile
+from django.utils.html import format_html
 
 # Register your models here.
 #this is to make passwords and other properties read only and change how properties are displayed in the admin page
@@ -13,5 +14,13 @@ class AccountAdmin(UserAdmin):
     list_filter = ()
     fieldsets = ()
 
+class UserProfileAdmin(admin.ModelAdmin):
+    def thumbnail(self, object):
+        return format_html("<img src='{}' width='30' style='border-radius:50%;'>".format(object.profile_picture.url))
+    thumbnail.short_description = "Profile Picture"
+
+    list_display = ('thumbnail', 'user')
+
 admin.site.register(Account, AccountAdmin)
 admin.site.register(ShippingAddress)
+admin.site.register(UserProfile)
